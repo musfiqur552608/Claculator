@@ -6,7 +6,10 @@ import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import java.lang.NumberFormatException
 
+private const val STATE_PENDING_OPERATION = "PendingOperation"
+private const val STATE_OPERAND1 = "Operand1"
 class MainActivity : AppCompatActivity() {
 
     private lateinit var result: EditText
@@ -14,8 +17,9 @@ class MainActivity : AppCompatActivity() {
     private val displayOperation by lazy(LazyThreadSafetyMode.NONE) { findViewById<TextView>(R.id.operation) }
 
     private var operand1: Double? = null
-    private var operand2: Double = 0.0
+    //private var operand2: Double = 0.0
     private var pendingOperation = "="
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,9 +66,11 @@ class MainActivity : AppCompatActivity() {
 
         val opListener = View.OnClickListener { v ->
             val op = (v as Button).text.toString()
-            val value = newNumber.text.toString()
-            if (value.isNotEmpty()) {
+            try {
+                val value = newNumber.text.toString().toDouble()
                 performOparation(value, op)
+            }catch (e: NumberFormatException){
+                newNumber.setText("")
             }
             pendingOperation = op
             displayOperation.text = pendingOperation
@@ -76,24 +82,23 @@ class MainActivity : AppCompatActivity() {
         buttonPlus.setOnClickListener(opListener)
     }
 
-    private fun performOparation(value: String, op: String) {
+    private fun performOparation(value: Double, op: String) {
         if (operand1 == null) {
-            operand1 = value.toDouble()
+            operand1 = value
         } else {
-            operand2 = value.toDouble()
             if (pendingOperation == "=") {
                 pendingOperation = op
             }
             when (pendingOperation) {
-                "=" -> operand1 = operand2
-                "/" -> if (operand2 == 0.0) {
+                "=" -> operand1 = value
+                "/" -> if (value == 0.0) {
                     operand1 = Double.NaN
                 } else {
-                    operand1 = operand1!! / operand2
+                    operand1 = operand1!! / value
                 }
-                "*" -> operand1 = operand1!!* operand2
-                "-" -> operand1 = operand1!!- operand2
-                "+" -> operand1 = operand1!!+ operand2
+                "*" -> operand1 = operand1!!* value
+                "-" -> operand1 = operand1!!- value
+                "+" -> operand1 = operand1!!+ value
 
             }
         }
